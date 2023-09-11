@@ -45,6 +45,10 @@ INSTALLED_APPS = [
 
     #3rd party
     'rest_framework',
+    'mptt',
+
+    #own
+    'e_comm.product',
 ]
 
 MIDDLEWARE = [
