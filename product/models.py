@@ -10,6 +10,10 @@ class Category(MPTTModel):
     parent = TreeForeignKey("self", on_delete=models.PROTECT, null=True, blank=True)
     
 
+    class Meta:
+        verbose_name= "Category"
+        verbose_name_plural = "Categories"
+
     class MPTTMeta:
         order_insertion_by = ["name"]
 

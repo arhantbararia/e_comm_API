@@ -6,15 +6,19 @@ from .serializer import ProductSerializer, BrandSerializer , CategorySerializer,
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.request import Request
 
 
 class ProductListAV(APIView):
 
     def get(self , request):
 
-
-        products = Product.objects.all()
+        if(len(request.query_params) == 0):
+            products = Product.objects.all()
+        elif('category' in request.query_params ):
+            products = Product.objects.filter(category__name = request.query_params['category']  )
+        elif('search' in request.query_params):
+            products = Product.objects.filter(slug= request.query_params['search'])
+        
         serializer = ProductSerializer(products, many = True)
 
         return Response(serializer.data)
@@ -228,9 +232,9 @@ class TestAV(APIView):
     def get(self , request):
         
         print(request)
-        print(request.query_params() )
+        print(request.query_params )
 
-        return Response()
+        return Response(request.query_params)
 
 
 
