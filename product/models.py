@@ -1,6 +1,16 @@
 from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
+from django.core.exceptions import ValidationError
 # Create your models here.
+
+from .fields import OrderField
+
+
+class ActiveQueryset(models.QuerySet):
+    def isactive(self):
+        return self.filter(is_active=True)
+
+
 
 
 class Category(MPTTModel):
@@ -8,7 +18,7 @@ class Category(MPTTModel):
     slug = models.SlugField(max_length=255)
     is_active = models.BooleanField(default=False)
     parent = TreeForeignKey("self", on_delete=models.PROTECT, null=True, blank=True)
-    
+    objects = ActiveQueryset.as_manager()
 
     class Meta:
         verbose_name= "Category"
@@ -24,6 +34,7 @@ class Category(MPTTModel):
 class Brand(models.Model):
     name = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=False)
+    objects = ActiveQueryset.as_manager()
     
 
     def __str__(self):
@@ -40,6 +51,7 @@ class Product(models.Model):
         "Category", on_delete=models.SET_NULL, null = True , blank= True
     )
     is_active = models.BooleanField(default=False)
+    objects = ActiveQueryset.as_manager()
     
 
     def __str__(self):
@@ -54,8 +66,37 @@ class ProductLine(models.Model):
         Product, on_delete=models.CASCADE, related_name="product_line"
     )
     is_active = models.BooleanField(default=False)
+
+    order = OrderField(unique_for_field="product" , default = 0 ,blank = True) #####################needs to be looked at
+
+    objects = ActiveQueryset.as_manager()
     
+    def clean(self):
+        qs = ProductLine.objects.filter(product=self.product)
+        for obj in qs:
+            if self.id != obj.id and self.order == obj.order:
+                raise ValidationError("Duplicate value.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(ProductLine, self).save(*args, **kwargs)
 
 
     def __str__(self):
         return str(self.sku)
+
+class ProductImage(models.Model):
+    
+    alternative_text = models.CharField(max_length=100)
+    url = models.ImageField(upload_to=None ,default = "test.jpg")
+
+    product = models.ForeignKey(
+        ProductLine, on_delete = models.CASCADE, related_name = 'product_image'
+    )
+    
+    
+    def __str__(self):
+        return str(self.url)
+    
+
+
