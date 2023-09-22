@@ -37,7 +37,7 @@ class Product(models.Model):
     is_digital = models.BooleanField(default=False)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     category = TreeForeignKey(
-        "Category", on_delete=models.SET_NULL, null=True, blank=True
+        "Category", on_delete=models.SET_NULL, null = True , blank= True
     )
     is_active = models.BooleanField(default=False)
     
@@ -49,7 +49,7 @@ class Product(models.Model):
 class ProductLine(models.Model):
     price = models.DecimalField(decimal_places=2, max_digits=5)
     sku = models.CharField(max_length=100)
-    stock_qty = models.IntegerField()
+    stock_qty = models.IntegerField(default = 0   )
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="product_line"
     )

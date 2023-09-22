@@ -1,9 +1,11 @@
 from django.core.exceptions import ValidationError
+from django.db import connection
 
 from product.models import Product, Brand, Category , ProductLine
 from .serializer import ProductSerializer, BrandSerializer , CategorySerializer, ProductLineSerializer
 
 from rest_framework.response import Response
+
 from rest_framework.views import APIView
 from rest_framework import status
 
@@ -19,7 +21,7 @@ class ProductListAV(APIView):
         elif('search' in request.query_params):
             products = Product.objects.filter(slug= request.query_params['search'])
         
-        serializer = ProductSerializer(products, many = True)
+        serializer = ProductSerializer(products.selected_related("category" , "brand"), many = True)
 
         return Response(serializer.data)
     
@@ -38,7 +40,7 @@ class ProductAV(APIView):
 
     def get_object(self , primaryKey):
         try:
-            return Product.object.get(pk = primaryKey)
+            return Product.objects.get(pk = primaryKey)
         
         except Product.DoesNotExist:
             return Response({'ERROR' : 'Object does not exist'}, status = status.HTTP_404_NOT_FOUND)
@@ -108,7 +110,7 @@ class BrandAV(APIView):
 
     def get_object(self , primaryKey):
         try:
-            return Brand.object.get(pk = primaryKey)
+            return Brand.objects.get(pk = primaryKey)
         
         except Brand.DoesNotExist:
             return Response({'ERROR' : 'Object does not exist'}, status = status.HTTP_404_NOT_FOUND)
@@ -178,7 +180,7 @@ class CategoryAV(APIView):
 
     def get_object(self , primaryKey):
         try:
-            return Category.object.get(pk = primaryKey)
+            return Category.objects.get(pk = primaryKey)
         
         except Category.DoesNotExist:
             return Response({'ERROR' : 'Object does not exist'}, status = status.HTTP_404_NOT_FOUND)
@@ -231,10 +233,24 @@ class TestAV(APIView):
     
     def get(self , request):
         
-        print(request)
-        print(request.query_params )
+      
+        
 
-        return Response(request.query_params)
+        products = Product.objects.all()
+        serializer = ProductSerializer(products.select_related("category" , "brand") , many = True)
+        data = serializer.data
+        
+        qs = list(connection.queries)
+        
+        for q in qs:
+
+            print(q['sql'])
+
+        print(q)
+        print(len(qs))
+
+
+        return Response(data)
 
 
 
