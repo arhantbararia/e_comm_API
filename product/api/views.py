@@ -5,6 +5,7 @@ from product.models import Product, Brand, Category , ProductLine
 from .serializer import ProductSerializer, BrandSerializer , CategorySerializer, ProductLineSerializer
 
 from rest_framework.response import Response
+from django.db.models import Prefetch
 
 from rest_framework.views import APIView
 from rest_framework import status
@@ -21,7 +22,7 @@ class ProductListAV(APIView):
         elif('search' in request.query_params):
             products = Product.objects.filter(slug= request.query_params['search'])
         
-        serializer = ProductSerializer(products.selected_related("category" , "brand"), many = True)
+        serializer = ProductSerializer(products.select_related("category" , "brand"), many = True)
 
         return Response(serializer.data)
     
@@ -237,16 +238,18 @@ class TestAV(APIView):
         
 
         products = Product.objects.all()
-        serializer = ProductSerializer(products.select_related("category" , "brand") , many = True)
+        serializer = ProductSerializer(products.select_related("category" , "brand")
+                                       .prefetch_related(Prefetch("product_line"))
+                                        .prefetch_related(Prefetch("product_line__product_image")) , many = True)
         data = serializer.data
         
         qs = list(connection.queries)
         
         for q in qs:
 
-            print(q['sql'])
+            print(q)
 
-        print(q)
+        
         print(len(qs))
 
 
