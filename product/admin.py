@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 # Register your models here.
-from .models import Product , Brand, Category, ProductLine, ProductImage
+from .models import Product , Brand, Category, ProductLine, ProductImage, AttributeValue , Attribute 
 
 class EditLinkInLine(object):
     def edit(self , instance):
@@ -43,5 +43,8 @@ admin.site.register(Product , ProductAdmin)
 admin.site.register(Brand)
 admin.site.register(Category)
 admin.site.register(ProductImage)
+admin.site.register(AttributeValue)
+admin.site.register(Attribute)
+
 
 

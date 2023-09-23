@@ -58,6 +58,34 @@ class Product(models.Model):
         return self.name
 
 
+
+
+
+
+class Attribute(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank = True )
+
+    def __str__(self) -> str:
+        return self.name
+
+
+
+
+class AttributeValue(models.Model):
+    att_value = models.CharField(max_length=100)
+    attribute = models.ForeignKey(
+        Attribute, on_delete=models.CASCADE, related_name= "attribute_value", null = True 
+    )
+
+    def __str__(self) -> str:
+        return f"{self.attribute.name}-{self.att_value}"
+
+
+
+
+
+
 class ProductLine(models.Model):
     price = models.DecimalField(decimal_places=2, max_digits=5)
     sku = models.CharField(max_length=100)
@@ -71,6 +99,8 @@ class ProductLine(models.Model):
 
     objects = ActiveQueryset.as_manager()
     
+    attribute_value = models.ManyToManyField(AttributeValue)
+
     def clean(self):
         qs = ProductLine.objects.filter(product=self.product)
         for obj in qs:
@@ -84,6 +114,9 @@ class ProductLine(models.Model):
 
     def __str__(self):
         return str(self.sku)
+
+
+
 
 class ProductImage(models.Model):
     
