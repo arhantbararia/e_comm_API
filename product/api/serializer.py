@@ -33,11 +33,10 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
-    attribute = AttributeSerializer(many = True )
+    
     class Meta:
         model = ProductType
-        fields = ("name", 
-                  "attribute")
+        fields = ("name",)
 
 
 
@@ -60,7 +59,7 @@ class BrandSerializer(serializers.ModelSerializer):
 class ProductLineSerializer(serializers.ModelSerializer):
     product_image = ProductImageSerializer(many = True)
     attribute_value = AttributeValueSerializer(many = True)
-    product_type = ProductTypeSerializer()
+    
     
     class Meta:
         model = ProductLine
@@ -70,7 +69,7 @@ class ProductLineSerializer(serializers.ModelSerializer):
             "sku",
             "product_image",
             "attribute_value",
-            "product_type",
+            
         )
     
 
@@ -114,6 +113,9 @@ class ProductSerializer(serializers.ModelSerializer):
     brand_name = serializers.CharField(source="brand.name")
     category_name = serializers.CharField(source='category.name')
     product_line = ProductLineSerializer(many=True)
+    attribute = serializers.SerializerMethodField()
+    product_type = ProductTypeSerializer()
+
 
     class Meta:
         model = Product
@@ -124,5 +126,52 @@ class ProductSerializer(serializers.ModelSerializer):
             "brand_name",
             "category_name",
             "product_line",
+            "product_type",
+            "attribute",
+            
         )
+    
 
+    def get_attribute(self, instance):
+       attribute = Attribute.objects.filter(product_type_attribute__product__id = instance.id)
+       print("all good here!")
+       return AttributeSerializer(attribute, many = True).data
+    
+
+
+    
+    def to_representation(self, instance):                      ##### good hack
+
+        data = super().to_representation(instance)    
+        print(1)
+        print(data)            #1
+        print("\n\n\n\n\n")
+        av_data = data.pop("attribute")
+        print(2)
+        print(av_data) 
+        print("\n\n\n\n\n")
+        print(3)             
+        print(data)
+        print("\n\n\n\n\n")
+        i = 3
+        attr_names = {       }
+        for key in av_data:
+            print(i +  1 )
+            i += 1
+            print(key)
+            attr_names.update({key["id"] : key["name"]})
+            print(attr_names)
+
+        print(i)
+        i += 1
+        print(attr_names)
+
+
+
+        print(i)
+        i += 1
+        data.update({"type specification" : attr_names})
+        print(data)
+
+        
+        return data
