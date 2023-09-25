@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from product.models import Brand, Category , Product, ProductLine, ProductImage, Attribute , AttributeValue
+from product.models import Brand, Category , Product, ProductLine, ProductImage, Attribute , AttributeValue, ProductType
 
 
 
@@ -32,6 +32,15 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 
 
+class ProductTypeSerializer(serializers.ModelSerializer):
+    attribute = AttributeSerializer(many = True )
+    class Meta:
+        model = ProductType
+        fields = ("name", 
+                  "attribute")
+
+
+
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -51,14 +60,54 @@ class BrandSerializer(serializers.ModelSerializer):
 class ProductLineSerializer(serializers.ModelSerializer):
     product_image = ProductImageSerializer(many = True)
     attribute_value = AttributeValueSerializer(many = True)
+    product_type = ProductTypeSerializer()
+    
     class Meta:
         model = ProductLine
         fields = (
+            "id",
             "price",
             "sku",
             "product_image",
-            "attribute_value"
+            "attribute_value",
+            "product_type",
         )
+    
+
+    def to_representation(self, instance):                      ##### good hack
+
+        data = super().to_representation(instance)    
+        # print(1)
+        # print(data)            #1
+        # print("\n\n\n\n\n")
+        av_data = data.pop("attribute_value")
+        # print(2)
+        # print(av_data) 
+        # print("\n\n\n\n\n")
+        # print(3)             
+        # print(data)
+        # print("\n\n\n\n\n")
+        # i = 3
+        attr_values = {       }
+        for key in av_data:
+            # print(i +  1 )
+            # i += 1
+            # print(key)
+            attr_values.update({key["attribute"]["name"] : key["att_value"]})
+
+        # print(i)
+        # i += 1
+        # print(attr_values)
+
+
+
+        # print(i)
+        # i += 1
+        data.update({"specification" : attr_values})
+        # print(data)
+
+        
+        return data
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -76,3 +125,4 @@ class ProductSerializer(serializers.ModelSerializer):
             "category_name",
             "product_line",
         )
+
