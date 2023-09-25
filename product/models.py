@@ -103,7 +103,7 @@ class Product(models.Model):
     is_active = models.BooleanField(default=False)
     
     objects = ActiveQueryset.as_manager()
-    
+    product_type = models.ForeignKey(ProductType, on_delete=models.PROTECT , default=ProductType.get_default_pk)
 
     def __str__(self):
         return self.name
@@ -145,7 +145,7 @@ class ProductLine(models.Model):
     objects = ActiveQueryset.as_manager()
     
     attribute_value = models.ManyToManyField(AttributeValue)
-    product_type = models.ForeignKey(ProductType, on_delete=models.PROTECT , default=ProductType.get_default_pk)
+    #product_type = models.ForeignKey(ProductType, on_delete=models.PROTECT , default=ProductType.get_default_pk)
 
     
     def clean(self):
