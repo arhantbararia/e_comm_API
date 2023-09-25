@@ -1,11 +1,12 @@
 # E-Commerce Backend API system
-v1.0.2
+v1.0.4
 - This project aims to create a complete backend API system for an E-commerece Website.
 
 
 
 ## Entity relationship Diagram
-![ER Diagram](https://github.com/arhantbararia/e_comm_API/assets/61796574/b8e21fb8-2c0e-417f-9ca5-a560599e3df5)
+![E_comm ER Diagram](https://github.com/arhantbararia/e_comm_API/assets/61796574/4d7a93ae-05b7-48d2-95ef-367a29f94d56)
+
 
 ## To Do
 - Host on python anywhere
