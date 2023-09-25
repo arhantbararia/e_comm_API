@@ -22,8 +22,10 @@ class ProductListAV(APIView):
         elif('search' in request.query_params):
             products = Product.objects.filter(slug= request.query_params['search'])
         
-        serializer = ProductSerializer(products.select_related("category" , "brand"), many = True)
-
+        serializer = ProductSerializer(products.select_related("category" , "brand")
+                                       .prefetch_related(Prefetch("product_line"))
+                                        .prefetch_related(Prefetch("product_line__product_image"))
+                                        .prefetch_related(Prefetch("product_line__attribute_value__attribute")) , many = True)
         return Response(serializer.data)
     
     def post(self , request):
@@ -240,14 +242,15 @@ class TestAV(APIView):
         products = Product.objects.all()
         serializer = ProductSerializer(products.select_related("category" , "brand")
                                        .prefetch_related(Prefetch("product_line"))
-                                        .prefetch_related(Prefetch("product_line__product_image")) , many = True)
+                                        .prefetch_related(Prefetch("product_line__product_image"))
+                                        .prefetch_related(Prefetch("product_line__attribute_value__attribute")) , many = True)
         data = serializer.data
         
         qs = list(connection.queries)
         
-        for q in qs:
+        # for q in qs:
 
-            print(q)
+        #     print(q)
 
         
         print(len(qs))
