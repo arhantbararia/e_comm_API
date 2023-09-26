@@ -2,10 +2,12 @@ from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 from django.core.exceptions import ValidationError
 # Create your models here.
-
+from datetime import datetime
 from .fields import OrderField
 
 
+
+### Class to filter inactive objects
 class ActiveQueryset(models.QuerySet):
     def isactive(self):
         return self.filter(is_active=True)
@@ -19,6 +21,9 @@ class Category(MPTTModel):
     is_active = models.BooleanField(default=False)
     parent = TreeForeignKey("self", on_delete=models.PROTECT, null=True, blank=True)
     objects = ActiveQueryset.as_manager()
+    created_at = models.DateTimeField(auto_now_add=True , editable = False)
+    updated = models.DateTimeField(auto_now= True , editable = True)
+
 
     class Meta:
         verbose_name= "Category"
@@ -35,6 +40,9 @@ class Brand(models.Model):
     name = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=False)
     objects = ActiveQueryset.as_manager()
+    created_at = models.DateTimeField(auto_now_add=True , editable = False)
+    updated = models.DateTimeField(auto_now= True , editable = True)
+
     
 
     def __str__(self):
@@ -47,6 +55,7 @@ class Brand(models.Model):
 class Attribute(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank = True )
+    
 
    
     def __str__(self) -> str:
@@ -60,6 +69,7 @@ class AttributeValue(models.Model):
     attribute = models.ForeignKey(
         Attribute, on_delete=models.CASCADE, related_name= "attribute_value", null = True 
     )
+    
 
     def __str__(self) -> str:
         return f"{self.attribute.name}-{self.att_value}"
@@ -104,15 +114,29 @@ class Product(models.Model):
     
     objects = ActiveQueryset.as_manager()
     product_type = models.ForeignKey(ProductType, on_delete=models.PROTECT , default=ProductType.get_default_pk)
+    created_at = models.DateTimeField(auto_now_add=True , editable = False)
+    updated = models.DateTimeField(auto_now= True , editable = True)
+
 
     def __str__(self):
         return self.name
 
 
+def select_attribute_value_of_product_type(instance):
+    product_attributes = instance.product.product_type.attribute.all()
+    print(instance.id)
+    selected_attributes = [attr_value.attribute for attr_value in instance.attribute_value.all()]
 
+    print(product_attributes)
+    print(selected_attributes)
 
-
-
+    for attribute in selected_attributes:
+        print(attribute)
+        if attribute not in product_attributes:
+            raise ValidationError(
+                f"The attribute '{attribute.name}' is not allowed in for the selected product type."
+                )
+        
 
 def validate_single_attribute_value(instance):
     # Get the attribute values associated with this product line
@@ -144,11 +168,14 @@ class ProductLine(models.Model):
 
     objects = ActiveQueryset.as_manager()
     
-    attribute_value = models.ManyToManyField(AttributeValue)
+    attribute_value = models.ManyToManyField(AttributeValue, blank= True )
     #product_type = models.ForeignKey(ProductType, on_delete=models.PROTECT , default=ProductType.get_default_pk)
+    created_at = models.DateTimeField(auto_now_add=True , editable = False)
+    updated = models.DateTimeField(auto_now= True , editable = True)
 
     
     def clean(self):
+        print("cleaned!")
 
          # Check if there are duplicate attributes in attribute_value
         
@@ -156,16 +183,14 @@ class ProductLine(models.Model):
         super().clean()
         #validate_single_attribute_value(self)
         
-
-
-        qs = ProductLine.objects.filter(product=self.product)
-        for obj in qs:
-            if self.id != obj.id and self.order == obj.order:
-                raise ValidationError("Duplicate value.")
-
+      
     def save(self, *args, **kwargs):
+
         self.full_clean()
-        return super(ProductLine, self).save(*args, **kwargs)
+        super(ProductLine, self).save(*args, **kwargs)
+        #select_attribute_value_of_product_type(self)
+        print("saved!")
+        
 
 
     def __str__(self):
@@ -182,6 +207,7 @@ class ProductImage(models.Model):
     product = models.ForeignKey(
         ProductLine, on_delete = models.CASCADE, related_name = 'product_image'
     )
+    updated = models.DateTimeField(auto_now= True )
     
     
     def __str__(self):
